@@ -4,6 +4,8 @@ import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Base64;
 
@@ -12,6 +14,7 @@ import java.util.Base64;
  */
 public class CryptoUtils
 {
+    private static final SecureRandom secureRandom = new SecureRandom();
 
     public static String Encrypt(String data, String passCode)
     {
@@ -26,8 +29,7 @@ public class CryptoUtils
             cipher.init(Cipher.ENCRYPT_MODE, secretKey);
             byte[] cipherText = cipher.doFinal(data.getBytes());
             result = Base64.getEncoder().encodeToString(cipherText);
-        }
-        catch (Exception e)
+        } catch (Exception e)
         {
             e.printStackTrace();
         }
@@ -49,11 +51,20 @@ public class CryptoUtils
             cipher.init(Cipher.DECRYPT_MODE, secretKey);
             byte[] decryptedText = cipher.doFinal(data);
             result = new String(decryptedText);
-        }
-        catch (Exception e)
+        } catch (Exception e)
         {
             e.printStackTrace();
         }
         return result;
     }
+
+    public static String GenerateKey()
+    {
+        String result = "";
+        byte generatedKey[] = new byte[16];
+        secureRandom.nextBytes(generatedKey);
+        result = Base64.getEncoder().encodeToString(generatedKey);
+        return result;
+    }
+
 }
