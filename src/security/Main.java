@@ -16,23 +16,7 @@ public class Main
         AuthenticationServer authenticationServer = new AuthenticationServer(5555);
         Thread asThread = new Thread(authenticationServer);
         asThread.start();
-        Socket ASSocket = new Socket("localhost", 5555);
-        String myKey = "Faisal";
-        PrintWriter writer = new PrintWriter(ASSocket.getOutputStream(), true);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(ASSocket.getInputStream()));
-        writer.println("0,0,0");
-        String ASReply = "";
-        while (!ASSocket.isClosed())
-        {
-            if (reader.ready())
-            {
-                ASReply = reader.readLine();
-                System.out.println(ASReply);
-                ASSocket.close();
-            }
-        }
-        String plainTextReply = CryptoUtils.Decrypt(ASReply, myKey);
-        System.out.println("Client: AS reply is:\n\t" + plainTextReply);
+        TicketGrantingServer ticketGrantingServer = new TicketGrantingServer(545454, 0);
 
     }
 }
