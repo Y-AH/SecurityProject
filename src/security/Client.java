@@ -15,11 +15,14 @@ public class Client implements Runnable
     private final String ClientPassword;
     private final int ClientID;
 
-    private final String AuthenticationServerHostname = "lcoalhost";
+    private final String AuthenticationServerHostname = "localhost";
     private final int AuthenticationServerPort = 5555;
 
     private final String[] TicketGrantingServersHostnames = {"localhost"};
-    private final int[] TicketGrantingServersPorts = {545454};
+    private final int[] TicketGrantingServersPorts = {54454};
+
+    private final String[] ServiceServerSocketHostnames = {"localhost"};
+    private final int[] ServiceServerPorts = {36864};
 
     public Client(int ClientID,int TicketGrantingServerID, int ServiceServerID, String ClientPassword)
     {
@@ -57,17 +60,58 @@ public class Client implements Runnable
             AuthenticationScanner.close();
             AuthenticationServerSocket.close();
 
+
+            System.out.println("Client: finished from AS");
+
             Socket TicketGrantingServerSocket = new Socket(TicketGrantingServersHostnames[TicketGrantingServerID],
                     TicketGrantingServersPorts[TicketGrantingServerID]);
-            PrintWriter TicketGrantingServerWriter = new PrintWriter(TicketGrantingServerSocket.getOutputStream());
+
+
+            PrintWriter TicketGrantingServerWriter = new PrintWriter(TicketGrantingServerSocket.getOutputStream(),true);
             TicketGrantingServerWriter.println(String.format(
                     "%d,%s,%s", ServiceServerID, tgsTicket, CryptoUtils.Encrypt(String.format(
                             "%d,%s,%d", ClientID, "localhost", (timeStamp2+1)
                     ), clientTGSKey)
             ));
-            
+            TicketGrantingServerWriter.flush();
+            Scanner tgsScanner = new Scanner(TicketGrantingServerSocket.getInputStream());
+            String tgsResponse = tgsScanner.nextLine();
+            tgsResponse = CryptoUtils.Decrypt(tgsResponse, clientTGSKey);
+            String tgsArgs[] = tgsResponse.split(",");
+            if (tgsArgs.length != 4)
+            {
+                System.out.println("Client: ERROR invalid tgs response");
+                return;
+            }
+            String clientServerKey = tgsArgs[0];
+            int serverID = Integer.parseInt(tgsArgs[1]);
+            int timeStamp4 = Integer.parseInt(tgsArgs[2]);
+            String serverTicket = tgsArgs[3];
+            TicketGrantingServerWriter.close();
+            tgsScanner.close();
+            TicketGrantingServerSocket.close();
 
 
+            Socket serverSocket = new Socket(ServiceServerSocketHostnames[ServiceServerID],
+                    ServiceServerPorts[ServiceServerID]);
+            PrintWriter ServiceServerWriter = new PrintWriter(serverSocket.getOutputStream(), true);
+            String auth = CryptoUtils.Encrypt(
+                                String.format("%d,%s,%d",ClientID, "localhost", (timeStamp4+1))
+                                ,clientServerKey);
+            ServiceServerWriter.println(
+                    String.format("%s,%s", serverTicket, auth)
+            );
+            ServiceServerWriter.flush();
+            Scanner ServiceServerScanner = new Scanner(serverSocket.getInputStream());
+            String vResponse = ServiceServerScanner.nextLine();
+            vResponse = CryptoUtils.Decrypt(vResponse, clientServerKey);
+            String vArgs[] = vResponse.split(",");
+            if (vArgs.length != 1)
+            {
+                System.out.println("Client: ERROR");
+                return;
+            }
+            System.out.println("Client: Done authenticating.");
 
         }
         catch (IOException ioException)
@@ -76,3 +120,38 @@ public class Client implements Runnable
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

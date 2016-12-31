@@ -16,7 +16,17 @@ public class Main
         AuthenticationServer authenticationServer = new AuthenticationServer(5555);
         Thread asThread = new Thread(authenticationServer);
         asThread.start();
-        TicketGrantingServer ticketGrantingServer = new TicketGrantingServer(545454, 0);
+        TicketGrantingServer ticketGrantingServer = new TicketGrantingServer(54454, 0);
+        Thread tgsThread = new Thread(ticketGrantingServer);
+        tgsThread.start();
+
+        ServiceServer serviceServer = new ServiceServer(36864, 0);
+        Thread serviceThread = new Thread(serviceServer);
+        serviceThread.start();
+
+        Client client = new Client(0, 0, 0, "Faisal");
+        Thread clientThread = new Thread(client);
+        clientThread.start();
 
     }
 }

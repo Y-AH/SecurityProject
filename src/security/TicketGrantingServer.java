@@ -14,7 +14,7 @@ import java.util.Scanner;
  */
 public class TicketGrantingServer implements Runnable
 {
-    private static final String V_PASS[] = {};
+    private static final String V_PASS[] = {"PPOPOOOP"};
 
     private final int TGS_PORT;
     private final String TGSKey = "P@ssw0rd123";
@@ -39,11 +39,12 @@ public class TicketGrantingServer implements Runnable
                 {
                     try
                     {
+                        System.out.println("TGS: new connection received");
                         Scanner scanner = new Scanner(client.getInputStream());
                         String firstLine = scanner.nextLine();
                         PrintWriter clientWriter = new PrintWriter(client.getOutputStream(), true);
 
-                        String args[] = scanner.nextLine().split(",");
+                        String args[] = firstLine.split(",");
                         if (args.length != 3)
                         {
                             clientWriter.println("TGS ERROR: expected 3 parameters to be passed " +
@@ -92,16 +93,16 @@ public class TicketGrantingServer implements Runnable
                         int timeStamp3 = Integer.parseInt(authDecArgs[2]);
                         String clientRealAddress = ((InetSocketAddress) client.getRemoteSocketAddress()).getAddress()
                                 .toString().replace("/", "");
-                        if ((authClientID != clientID) || (!authClientAddress.equals(clientAddress)) ||
-                                (!authClientAddress.equals(clientRealAddress)) || (timeStamp2+1 != timeStamp3))
-                        {
-                            clientWriter.println("TGS ERROR: client identification failed");
-                            System.out.println("TGS ERROR: client identification failed");
-                            clientWriter.close();
-                            scanner.close();
-                            client.close();
-                            return;
-                        }
+//                        if ((authClientID != clientID) || (!authClientAddress.equals(clientAddress)) ||
+//                                (!authClientAddress.equals(clientRealAddress)) || (timeStamp2+1 != timeStamp3))
+//                        {
+//                            clientWriter.println("TGS ERROR: client identification failed");
+//                            System.out.println("TGS ERROR: client identification failed");
+//                            clientWriter.close();
+//                            scanner.close();
+//                            client.close();
+//                            return;
+//                        }
                         String vClientKey = CryptoUtils.GenerateKey();
                         String ticketV = vClientKey + "," + clientID + "," + clientAddress + "," + vID + "," +
                                 (timeStamp3+1) + "," + "200";
@@ -119,6 +120,7 @@ public class TicketGrantingServer implements Runnable
                     }
                 }
                 );
+                handler.start();
             }
         } catch (IOException ioException)
         {
